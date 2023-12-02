@@ -267,11 +267,9 @@ void RingBuf_writeDataValue(struct RingBuf *RingBuf1, const char value,
 void RingBuf_update_writeptr(struct RingBuf *RingBuf1, unsigned int count)
 {
 	if (count == 0 || count > RingBuf1->bufLen) {
-#ifdef RINGBUF_COUNT_CHECK
 		AUD_LOG_W("%s count[%u] datacount[%d] Len[%d]\n",
 			  __func__, count,
 			  RingBuf1->datacount, RingBuf1->bufLen);
-#endif
 		return;
 	}
 
@@ -339,11 +337,10 @@ void RingBuf_update_readptr(struct RingBuf *RingBuf1, unsigned int count)
 
 	/* handle buffer underflow*/
 	if (count > RingBuf1->datacount) {
-#ifdef RINGBUF_COUNT_CHECK
 		AUD_LOG_W("%s underflow count %u datacount %d Len %d\n",
 			   __func__, count,
 			   RingBuf1->datacount, RingBuf1->bufLen);
-#endif
+
 		if (RingBuf1->pWrite >= RingBuf1->pRead)
 			RingBuf1->datacount =
 			RingBuf1->pWrite - RingBuf1->pRead;
@@ -510,23 +507,24 @@ int set_audiobuffer_threshold(struct audio_hw_buffer *audio_hwbuf,
 {
 	int ret = 0;
 
-	if (audio_hwbuf == NULL) {
-		AUD_LOG_D("%s audio_hwbuf == NULL", __func__);
-		return -1;
-	}
-
 	audio_hwbuf->aud_buffer.start_threshold =
 		substream->runtime->start_threshold;
 	audio_hwbuf->aud_buffer.stop_threshold =
 		substream->runtime->stop_threshold;
 	audio_hwbuf->aud_buffer.period_size = substream->runtime->period_size;
 	audio_hwbuf->aud_buffer.period_count = substream->runtime->periods;
-
+	AUD_LOG_D(
+		"start_threshold = %u stop_threshold = %u period_size = %d period_count = %d\n",
+		audio_hwbuf->aud_buffer.start_threshold,
+		audio_hwbuf->aud_buffer.stop_threshold,
+		audio_hwbuf->aud_buffer.period_size,
+		audio_hwbuf->aud_buffer.period_count);
 	return ret;
 }
 
 int set_afe_audio_pcmbuf(struct audio_hw_buffer *audio_hwbuf,
-			 struct snd_pcm_substream *substream)
+			 struct snd_pcm_substream *substream,
+			 struct snd_pcm_hw_params *params)
 {
 	int ret = 0;
 
@@ -545,19 +543,20 @@ int set_audiobuffer_attribute(struct audio_hw_buffer *audio_hwbuf,
 {
 	int ret = 0;
 
-	if (audio_hwbuf == NULL) {
-		AUD_LOG_D("%s audio_hwbuf == NULL", __func__);
-		return -1;
-	}
-
-	audio_hwbuf->aud_buffer.buffer_attr.direction = direction;
-
 	if (params == NULL)
 		return 0;
 
 	audio_hwbuf->aud_buffer.buffer_attr.channel = params_channels(params);
 	audio_hwbuf->aud_buffer.buffer_attr.format = params_format(params);
 	audio_hwbuf->aud_buffer.buffer_attr.rate = params_rate(params);
+	audio_hwbuf->aud_buffer.buffer_attr.direction = direction;
+
+	AUD_LOG_D("%s ch = %u fmt = %u rate = %u dir = %d\n",
+		  __func__,
+		  audio_hwbuf->aud_buffer.buffer_attr.channel,
+		  audio_hwbuf->aud_buffer.buffer_attr.format,
+		  audio_hwbuf->aud_buffer.buffer_attr.rate,
+		  audio_hwbuf->aud_buffer.buffer_attr.direction);
 
 	return ret;
 }
@@ -998,12 +997,10 @@ int sync_ringbuf_readidx(struct RingBuf *task_ring_buf,
 		datacount = task_ring_buf->bufLen -
 			    (task_ring_buf->pRead - readidx);
 
-#ifdef RINGBUF_COUNT_CHECK
 	if (datacount == 0 || datacount == task_ring_buf->bufLen) {
 		dump_rbuf_s(__func__, task_ring_buf);
 		dump_rbuf_bridge_s(__func__, buf_bridge);
 	}
-#endif
 
 	RingBuf_update_readptr(task_ring_buf, datacount);
 
