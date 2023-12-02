@@ -539,21 +539,14 @@ struct dynamic_fps_info {
 	/*unsigned int idle_check_interval;*//*ms*/
 };
 
-struct vsync_trigger_time {
-	unsigned int fps;
-	unsigned int trigger_after_te;
-	unsigned int config_expense_time;
-};
-
 /*DynFPS*/
 enum DynFPS_LEVEL {
 	DFPS_LEVEL0 = 0,
 	DFPS_LEVEL1,
-	DFPS_LEVEL2,
 	DFPS_LEVELNUM,
 };
 
-#define DFPS_LEVELS 3
+#define DFPS_LEVELS 2
 enum FPS_CHANGE_INDEX {
 	DYNFPS_NOT_DEFINED = 0,
 	DYNFPS_DSI_VFP = 1,
@@ -573,6 +566,7 @@ struct dfps_info {
 	unsigned int horizontal_sync_active;
 	unsigned int horizontal_backporch;
 	unsigned int horizontal_frontporch;
+
 	unsigned int PLL_CLOCK;
 	/* data_rate = PLL_CLOCK x 2 */
 	unsigned int data_rate;
@@ -676,7 +670,6 @@ struct LCM_DSI_PARAMS {
 	/* PLL_CLOCK = (int) PLL_CLOCK */
 	unsigned int PLL_CLOCK;
 	/* data_rate = PLL_CLOCK x 2 */
-	unsigned int ap_data_rate;
 	unsigned int data_rate;
 	unsigned int PLL_CK_VDO;
 	unsigned int PLL_CK_CMD;
@@ -750,8 +743,6 @@ struct LCM_DSI_PARAMS {
 	/*for ARR*/
 	unsigned int dynamic_fps_levels;
 	struct dynamic_fps_info dynamic_fps_table[DYNAMIC_FPS_LEVELS];
-	struct vsync_trigger_time vsync_after_te[DFPS_LEVELS];
-
 #ifdef CONFIG_MTK_HIGH_FRAME_RATE
 	/****DynFPS start****/
 	unsigned int dfps_enable;
@@ -806,13 +797,9 @@ struct LCM_PARAMS {
 	unsigned int min_luminance;
 	unsigned int average_luminance;
 	unsigned int max_luminance;
-
 #ifdef CONFIG_MTK_HIGH_FRAME_RATE
 	enum LCM_Send_Cmd_Mode sendmode;
 #endif
-	/* HBM: High Backlight Mode */
-	unsigned int hbm_en_time;
-	unsigned int hbm_dis_time;
 };
 
 
@@ -1013,13 +1000,10 @@ struct LCM_DRIVER {
 	/* /////////////////////////CABC backlight related function */
 	void (*set_backlight)(unsigned int level);
 	void (*set_backlight_cmdq)(void *handle, unsigned int level);
-	bool (*get_hbm_state)(void);
-	bool (*get_hbm_wait)(void);
-	bool (*set_hbm_wait)(bool wait);
-	bool (*set_hbm_cmdq)(bool en, void *qhandle);
 	void (*set_pwm)(unsigned int divider);
 	unsigned int (*get_pwm)(unsigned int divider);
 	void (*set_backlight_mode)(unsigned int mode);
+	void (*set_hw_info)(void);
 	/* ///////////////////////// */
 
 	int (*adjust_fps)(void *cmdq, int fps, struct LCM_PARAMS *params);
@@ -1049,6 +1033,7 @@ struct LCM_DRIVER {
 	void (*set_pwm_for_mix)(int enable);
 
 	void (*aod)(int enter);
+
 	/* /////////////DynFPS///////////////////////////// */
 	void (*dfps_send_lcm_cmd)(void *cmdq_handle,
 		unsigned int from_level, unsigned int to_level, struct LCM_PARAMS *params);
