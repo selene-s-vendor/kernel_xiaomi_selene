@@ -368,7 +368,9 @@ static int mtk_leds_parse_dt(struct device *dev,
 				level = s_led->conf.cdev.max_brightness;
 			else
 				level = 0;
-		};
+		} else {
+			level = s_led->conf.cdev.max_brightness;
+		}
 		pr_info("parse %d leds dt: %s, %d, %d",
 			num, s_led->conf.cdev.name,
 			s_led->conf.max_level,
