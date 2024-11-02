@@ -38,6 +38,8 @@
 #include <linux/sched.h>	/* For wait queue*/
 #include <linux/kthread.h>	/* For Kthread_run */
 #include <linux/platform_device.h>	/* platform device */
+#include <linux/of_platform.h>
+#include <linux/iio/consumer.h>
 #include <linux/time.h>
 
 #include <linux/netlink.h>	/* netlink */
@@ -612,7 +614,7 @@ void fgauge_get_profile_id(void)
 		return;
 	}
 
-	battery_dev = of_find_device_by_node(batterty_node);
+	battery_dev = of_find_device_by_node(battery_node);
 	if (!battery_dev) {
 		bm_err("[%s] of_find_device_by_node fail\n", __func__);
 		return;
